@@ -1,2 +1,3 @@
-# coding-agent
-Don't want to pay for a coding agent, so I'm gonna build my own
+# CLI Coding Agent
+
+A Python-based CLI tool that uses LLMs for coding tasks, inspired by Claude Code. Modular structure for extensibility.
