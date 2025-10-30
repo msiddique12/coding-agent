@@ -9,3 +9,6 @@ openai==1.12.0
 
 # HuggingFace Inference API
 huggingface-hub==0.20.3
+
+# Rich for CLI colors
+rich==13.7.0
