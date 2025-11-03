@@ -1,6 +1,7 @@
 from llm_providers.nvidia_nim import NIMProvider
 from llm_providers.huggingface import HuggingFaceProvider
 from utils.filesystem import list_code_files, read_file
+from tools.code_search import CodeSearchTool
 import logging
 import os
 
@@ -21,6 +22,11 @@ class CodingAgent:
             self.llm = HuggingFaceProvider()
         else:
             raise ValueError(f"Unsupported provider: {provider_name}")
+        
+        self.tools = {
+            "code_search": CodeSearchTool(),
+            #More tools to be added
+        }
 
     def get_response(self, prompt: str) -> str:
         logging.info(f"Provider: {type(self.llm).__name__}, Prompt: {prompt!r}")
