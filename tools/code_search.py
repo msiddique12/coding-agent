@@ -6,7 +6,7 @@ class CodeSearchTool(AgentTool):
         return "code_search"
     
     def description(self):
-        return "Search code for a string or regex."
+        return "Search all text files for a regex or string pattern"
 
     def args(self):
         return {"pattern": str}
@@ -16,14 +16,17 @@ class CodeSearchTool(AgentTool):
         regex = re.compile(pattern)
         
         for root, _, files in os.walk("."):
-            for fn in files:
-                if fn.endswith(".py"):
-                    path = os.path.join(root, fn)
+            for filename in files:
+                path = os.path.join(root, filename)
+                try:
                     with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                             content = f.read()
                             if regex.search(content):
                                 res.append(f"{path}")
-        return "\n".join(res) if res else f"No results for {pattern}"
+                except Exception:
+                    #binary files and other non-text files
+                    continue
+        return "\n".join(res) if res else f"No matches for {pattern}"
     
     
                 
