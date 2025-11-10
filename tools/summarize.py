@@ -1,7 +1,7 @@
 from .base import AgentTool
 from llm_providers import get_llm_client
 
-class CodeSearchTool(AgentTool):
+class FileSummarizeTool(AgentTool):
     def name(self):
         return "summarize_file"
     
