@@ -17,29 +17,24 @@ class CodeEditTool(AgentTool):
                 content = f.read()
         except Exception as e:
             return f"Cannot read file {filename}: {str(e)}"
-        
+        # Use the generic provider client and its `query` method.
         llm = get_llm_client()
-        
+
         prompt = f"""You are a helpful and precise code editor.
-        Given the following source code, apply the user instruction below and return the full updated code.
+                    Given the following source code, apply the user 
+                    instruction below and return the full updated code.
 
-        Source code:
-        {content}
+                    Source code:
+                    {content}
 
-        User instruction:
-        {instruction}
+                    User instruction:
+                    {instruction}
 
-        Return only the updated code without explanation.
-        """
+                    Return only the updated code without explanation.
+                    """
         try:
-            completion = self.client.chat.completions.create(
-                model="qwen/qwen2.5-coder-32b-instruct",
-                messages=[{"role": "user", "content": prompt}],
-                temperature = 0.1,
-                max_tokens = 2048,
-                stream = False   
-            )
-            edited_content = completion.choices[0].message.content
+            # The provider exposes a simple `query(prompt)` interface returning text.
+            edited_content = llm.query(prompt)
             return edited_content
         except Exception as e:
             return f"LLM editing error: {str(e)}"

@@ -1,5 +1,4 @@
-from llm_providers.nvidia_nim import NIMProvider
-from llm_providers.huggingface import HuggingFaceProvider
+from llm_providers import get_llm_client
 from utils.filesystem import list_code_files, read_file
 import logging
 import os
@@ -24,12 +23,8 @@ logging.basicConfig(
 
 class CodingAgent:
     def __init__(self, provider_name="nim"):
-        if provider_name == "nim":
-            self.llm = NIMProvider()
-        elif provider_name == "huggingface":
-            self.llm = HuggingFaceProvider()
-        else:
-            raise ValueError(f"Unsupported provider: {provider_name}")
+        # Use the provider factory so tests can inject a dummy provider
+        self.llm = get_llm_client(provider_name)
         
         self.tools = {
             tool.name(): tool for tool in [
@@ -74,6 +69,6 @@ class CodingAgent:
         return tool.run(**kwargs)
     
     def list_tools(self):
-        return {name: tool.description() for name, tool in self.tool.items()}
+        return {name: tool.description() for name, tool in self.tools.items()}
         
         

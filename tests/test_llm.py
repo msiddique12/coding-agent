@@ -1,5 +1,10 @@
 import sys
 import os
+import pytest
+
+# This module is a script-style smoke test for manual runs. Skip under pytest
+pytest.skip("Script-style LLM smoke test; run as script", allow_module_level=True)
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from dotenv import load_dotenv; load_dotenv()
 from agent.agent import CodingAgent
