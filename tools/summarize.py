@@ -19,6 +19,7 @@ class FileSummarizeTool(AgentTool):
             return f"Error reading file {filename}: {str(e)}"
         
         llm = get_llm_client()
-        summary = llm.summarize(content)
+        prompt = f"Please summarize the following file content:\n\n{content}"
+        summary = llm.query(prompt)
         return summary
         

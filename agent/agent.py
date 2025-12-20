@@ -5,12 +5,12 @@ import os
 
 from tools.code_search import CodeSearchTool
 from tools.file_search import FileSearchTool
-from tools.code_search import CodeSearchTool
 from tools.summarize import FileSummarizeTool
 from tools.todo_finder import ToDoFinderTool
 from tools.code_edit import CodeEditTool
 from tools.git_tools import GitStatusTool, GitDiffTool
 from tools.run_tests import RunTestsTool
+from tools.finish import FinishTool
 
 log_dir = "logs"
 os.makedirs(log_dir, exist_ok = True)
@@ -36,6 +36,7 @@ class CodingAgent:
                 GitStatusTool(),
                 GitDiffTool(),
                 RunTestsTool(),
+                FinishTool(),
             ]
         }
 

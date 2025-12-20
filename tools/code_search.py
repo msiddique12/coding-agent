@@ -1,5 +1,6 @@
 from .base import AgentTool
 import os, re
+from utils.filesystem import IGNORE_DIRS
 
 class CodeSearchTool(AgentTool):
     def name(self):
@@ -15,7 +16,8 @@ class CodeSearchTool(AgentTool):
         res = []
         regex = re.compile(pattern)
         
-        for root, _, files in os.walk("."):
+        for root, dirs, files in os.walk("."):
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
             for filename in files:
                 path = os.path.join(root, filename)
                 try:
