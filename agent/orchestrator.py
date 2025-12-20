@@ -14,6 +14,8 @@ class Orchestrator:
         """
         This is the "Reason" part of ReAct. It thinks about the next action.
         """
+        # Add project structure to the context
+        project_files = self.agent.use_tool("file_search")
         tools_with_args = []
         for tool_name, tool in self.agent.tools.items():
             args_str = ", ".join([f"{name}: {type.__name__}" for name, type in tool.args().items()])
@@ -26,6 +28,10 @@ class Orchestrator:
 
 GOAL: "{goal}"
 
+You have a general understanding of the project structure:
+PROJECT STRUCTURE:
+{project_files}
+
 You will reason step-by-step, choosing one of the following tools to use at each step.
 
 TOOLS:
@@ -34,7 +40,7 @@ TOOLS:
 HISTORY:
 {history_str}
 
-Based on the history, decide on your next thought and action. 
+Based on the project structure and the history, decide on your next thought and action. 
 Your action MUST be one of the tools listed above.
 You MUST respond in the following JSON format, and nothing else:
 {{

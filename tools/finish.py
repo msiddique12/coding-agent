@@ -1,4 +1,3 @@
-
 from .base import AgentTool
 
 class FinishTool(AgentTool):

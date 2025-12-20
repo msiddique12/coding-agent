@@ -21,6 +21,9 @@ def main():
     parser_sum_file = subparsers.add_parser("summarize-file", help="Summarize a specific file")
     parser_sum_file.add_argument("file_path")
     
+    parser_greet = subparsers.add_parser("greet", help="Greet a person by name")
+    parser_greet.add_argument("--name", required=True, help="Name of the person to greet")
+    
     args = parser.parse_args()
     agent = CodingAgent(provider_name=getattr(args, "provider", "nim"))
     orchestrator = Orchestrator(agent)
@@ -40,6 +43,8 @@ def main():
     elif args.subcommand == "summarize-file":
         summary = agent.summarize_file(args.file_path)
         console.print(f"[blue]File summary:[/blue]\n{summary}")
+    elif args.subcommand == "greet":
+        console.print(f"[magenta]Hello, {args.name}![/magenta]")
 
 if __name__ == "__main__":
     main()

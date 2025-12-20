@@ -11,6 +11,9 @@ from tools.code_edit import CodeEditTool
 from tools.git_tools import GitStatusTool, GitDiffTool
 from tools.run_tests import RunTestsTool
 from tools.finish import FinishTool
+from tools.create_file import CreateFileTool
+from tools.delete_file import DeleteFileTool
+from tools.shell_command import ShellCommandTool
 
 log_dir = "logs"
 os.makedirs(log_dir, exist_ok = True)
@@ -36,6 +39,9 @@ class CodingAgent:
                 GitStatusTool(),
                 GitDiffTool(),
                 RunTestsTool(),
+                CreateFileTool(),
+                DeleteFileTool(),
+                ShellCommandTool(),
                 FinishTool(),
             ]
         }
