@@ -6,7 +6,7 @@ class CodeEditTool(AgentTool):
         return "code_edit"
     
     def description(self):
-        return "Edit any text/code file based on instructions using an LLM."
+        return "Edit any text/code file based on instructions using an LLM and writes the changes back to the file."
     
     def args(self):
         return {"filename": str, "instruction": str}
@@ -17,7 +17,6 @@ class CodeEditTool(AgentTool):
                 content = f.read()
         except Exception as e:
             return f"Cannot read file {filename}: {str(e)}"
-        # Use the generic provider client and its `query` method.
         llm = get_llm_client()
 
         prompt = f"""You are a helpful and precise code editor.
@@ -33,9 +32,10 @@ class CodeEditTool(AgentTool):
                     Return only the updated code without explanation.
                     """
         try:
-            # The provider exposes a simple `query(prompt)` interface returning text.
             edited_content = llm.query(prompt)
-            return edited_content
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(edited_content)
+            return f"Successfully edited {filename}"
         except Exception as e:
             return f"LLM editing error: {str(e)}"
     
