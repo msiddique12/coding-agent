@@ -1,5 +1,6 @@
 import argparse
 from agent.agent import CodingAgent
+from agent.orchestrator import Orchestrator
 from dotenv import load_dotenv
 from rich.console import Console
 
@@ -22,10 +23,11 @@ def main():
     
     args = parser.parse_args()
     agent = CodingAgent(provider_name=getattr(args, "provider", "nim"))
+    orchestrator = Orchestrator(agent)
     
     if args.subcommand == "ask":
         console.print(f"[bold white]User:[/bold white] {args.prompt}")
-        response = agent.get_response(args.prompt)
+        response = orchestrator.run(args.prompt)
         console.print(f"[green]Agent:[/green] {response}")
     elif args.subcommand == "list-files":
         files = agent.list_files()
