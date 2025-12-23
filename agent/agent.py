@@ -14,6 +14,7 @@ from tools.finish import FinishTool
 from tools.create_file import CreateFileTool
 from tools.delete_file import DeleteFileTool
 from tools.shell_command import ShellCommandTool
+from tools.web_search import WebSearchTool
 
 log_dir = "logs"
 os.makedirs(log_dir, exist_ok = True)
@@ -42,6 +43,7 @@ class CodingAgent:
                 CreateFileTool(),
                 DeleteFileTool(),
                 ShellCommandTool(),
+                WebSearchTool(),
                 FinishTool(),
             ]
         }

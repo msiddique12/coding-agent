@@ -16,3 +16,6 @@ rich>=13.7.0,<14.0.0
 # Vector Search
 sentence-transformers>=2.2.2
 faiss-cpu>=1.7.4
+
+# Web Search
+duckduckgo-search>=5.3.1b1,<6.0.0
