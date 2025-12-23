@@ -8,7 +8,7 @@ from tools.file_search import FileSearchTool
 from tools.summarize import FileSummarizeTool
 from tools.todo_finder import ToDoFinderTool
 from tools.code_edit import CodeEditTool
-from tools.git_tools import GitStatusTool, GitDiffTool
+from tools.git_tools import GitStatusTool, GitDiffTool, GitAddTool, GitCommitTool
 from tools.run_tests import RunTestsTool
 from tools.finish import FinishTool
 from tools.create_file import CreateFileTool
@@ -39,6 +39,8 @@ class CodingAgent:
                 CodeEditTool(),
                 GitStatusTool(),
                 GitDiffTool(),
+                GitAddTool(),
+                GitCommitTool(),
                 RunTestsTool(),
                 CreateFileTool(),
                 DeleteFileTool(),
