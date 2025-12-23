@@ -6,6 +6,17 @@ from rich.syntax import Syntax
 MAX_TURNS = 10
 console = Console()
 
+# Define tools that perform actions requiring user confirmation
+DANGEROUS_TOOLS = [
+    "run_tests",
+    "shell_command",
+    "code_edit",
+    "create_file",
+    "delete_file",
+    "git_add", 
+    "git_commit"
+]
+
 class Orchestrator:
     def __init__(self, agent: CodingAgent):
         self.agent = agent
@@ -80,6 +91,12 @@ If you have accomplished the goal, use the 'finish' tool.
 
         console.print(f"Action: Using tool [bold cyan]{tool_name}[/bold cyan] with args: {tool_args}")
         
+        # Safety confirmation for dangerous tools
+        if tool_name in DANGEROUS_TOOLS:
+            confirm = input("Run this action? (y/n): ")
+            if confirm.lower() != 'y':
+                return f"User denied execution of tool '{tool_name}'."
+
         try:
             observation = self.agent.use_tool(tool_name, **tool_args)
         except Exception as e:
