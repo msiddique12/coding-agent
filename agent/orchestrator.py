@@ -4,6 +4,8 @@ from rich.console import Console
 from rich.syntax import Syntax
 
 DEFAULT_MAX_TURNS = 10
+MAX_OBSERVATION_CHARS = 4000
+MAX_HISTORY_ITEMS = 24
 console = Console()
 
 # Define tools that perform actions requiring user confirmation
@@ -12,7 +14,9 @@ DANGEROUS_TOOLS = {
     "shell_command",
     "code_edit",
     "create_file",
+    "append_file",
     "delete_file",
+    "replace_in_file",
     "git_add", 
     "git_commit"
 }
@@ -22,6 +26,12 @@ class Orchestrator:
         self.agent = agent
         self.max_turns = max_turns
         self.auto_approve = auto_approve
+
+    def _truncate_text(self, value, max_chars=MAX_OBSERVATION_CHARS):
+        text = value if isinstance(value, str) else repr(value)
+        if len(text) <= max_chars:
+            return text
+        return text[:max_chars] + f"\n...[truncated {len(text) - max_chars} chars]"
 
     def _parse_action_json(self, response_str: str) -> dict:
         cleaned = response_str.strip().replace("```json", "").replace("```", "").strip()
@@ -43,13 +53,19 @@ class Orchestrator:
             project_files = self.agent.use_tool("file_search")
         except Exception:
             project_files = "\n".join(self.agent.list_files())
+        project_files = self._truncate_text(project_files, 3000)
         tools_with_args = []
         for tool_name, tool in self.agent.tools.items():
             args_str = ", ".join([f"{name}: {type.__name__}" for name, type in tool.args().items()])
             tools_with_args.append(f"- {tool_name}({args_str}): {tool.description()}")
-        
+        if self.agent.unavailable_tools:
+            unavailable = "\n".join(
+                f"- {name}: {reason}" for name, reason in self.agent.unavailable_tools.items()
+            )
+            tools_with_args.append("\nUNAVAILABLE TOOLS (do not select these):\n" + unavailable)
+
         formatted_tools = "\n".join(tools_with_args)
-        history_str = "\n".join(history)
+        history_str = "\n".join(history[-MAX_HISTORY_ITEMS:])
 
         prompt = f"""You are an autonomous AI agent. Your goal is to solve the user's request.
 
@@ -60,6 +76,11 @@ PROJECT STRUCTURE:
 {project_files}
 
 You will reason step-by-step, choosing one of the following tools to use at each step.
+Prefer deterministic tools for code changes:
+- Use read_file to inspect exact file contents / line ranges before editing.
+- Use replace_in_file or append_file for targeted edits.
+- Use code_edit only for complex refactors.
+- Use git_diff and run_tests to validate before finishing.
 
 TOOLS:
 {formatted_tools}
@@ -104,6 +125,9 @@ If you have accomplished the goal, use the 'finish' tool.
             return "Error: LLM response did not include a 'tool' for the action."
         if not isinstance(tool_args, dict):
             return f"Error: Tool args for '{tool_name}' must be a JSON object."
+        if tool_name not in self.agent.tools and tool_name != "finish":
+            available = ", ".join(sorted(self.agent.tools.keys()))
+            return f"Error: Unknown tool '{tool_name}'. Available tools: {available}"
 
         console.print(f"Action: Using tool [bold cyan]{tool_name}[/bold cyan] with args: {tool_args}")
         
@@ -153,7 +177,7 @@ If you have accomplished the goal, use the 'finish' tool.
             # 2. Act
             observation = self._act(action)
             history.append(f"Action: {action}")
-            history.append(f"Observation: {observation}")
+            history.append(f"Observation: {self._truncate_text(observation)}")
 
             console.print("Observation:", style="bold yellow")
             # Pretty print code blocks if observation is a string

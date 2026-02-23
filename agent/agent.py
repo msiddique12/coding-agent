@@ -12,7 +12,10 @@ from tools.git_tools import GitStatusTool, GitDiffTool, GitAddTool, GitCommitToo
 from tools.run_tests import RunTestsTool
 from tools.finish import FinishTool
 from tools.create_file import CreateFileTool
+from tools.append_file import AppendFileTool
 from tools.delete_file import DeleteFileTool
+from tools.read_file import ReadFileTool
+from tools.replace_in_file import ReplaceInFileTool
 from tools.shell_command import ShellCommandTool
 from tools.web_search import WebSearchTool
 
@@ -46,7 +49,10 @@ class CodingAgent:
             ("git_commit", GitCommitTool),
             ("run_tests", RunTestsTool),
             ("create_file", CreateFileTool),
+            ("append_file", AppendFileTool),
             ("delete_file", DeleteFileTool),
+            ("read_file", ReadFileTool),
+            ("replace_in_file", ReplaceInFileTool),
             ("shell_command", ShellCommandTool),
             ("web_search", WebSearchTool),
             ("finish", FinishTool),

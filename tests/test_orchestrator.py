@@ -3,7 +3,8 @@ from agent.orchestrator import Orchestrator
 
 class StubAgent:
     def __init__(self):
-        self.tools = {}
+        self.tools = {"shell_command": object()}
+        self.unavailable_tools = {}
         self.calls = []
 
     def use_tool(self, tool_name, **kwargs):
