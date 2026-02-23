@@ -149,12 +149,9 @@ If you have accomplished the goal, use the 'finish' tool.
             
         return observation
 
-    def run(self, goal: str):
-        """
-        Runs the ReAct loop to accomplish a goal.
-        """
-        history = []
-        
+    def _run_loop(self, goal: str, history: list | None = None):
+        history = list(history or [])
+
         for i in range(self.max_turns):
             console.print(f"\n--- Turn {i+1}/{self.max_turns} ---")
             
@@ -174,7 +171,7 @@ If you have accomplished the goal, use the 'finish' tool.
             if action.get("tool") == "finish":
                 final_answer = action.get("args", {}).get("answer", "No final answer provided.")
                 console.print(f"Final Answer: {final_answer}", style="bold green")
-                return final_answer
+                return final_answer, history
             
             # 2. Act
             observation = self._act(action)
@@ -194,4 +191,15 @@ If you have accomplished the goal, use the 'finish' tool.
 
         final_answer = f"Reached max turns ({self.max_turns}), stopping."
         console.print(f"[bold red]{final_answer}[/bold red]")
+        return final_answer, history
+
+    def run(self, goal: str, history: list | None = None):
+        """
+        Runs the ReAct loop to accomplish a goal.
+        """
+        final_answer, _history = self._run_loop(goal, history=history)
         return final_answer
+
+    def run_with_state(self, goal: str, history: list | None = None):
+        final_answer, updated_history = self._run_loop(goal, history=history)
+        return {"goal": goal, "history": updated_history, "final_answer": final_answer}

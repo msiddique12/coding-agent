@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from dotenv import load_dotenv
 from rich.console import Console
@@ -6,6 +7,7 @@ from llm_providers import supported_provider_names, validate_provider_environmen
 
 load_dotenv()
 console = Console()
+DEFAULT_SESSION_FILE = os.path.join(".coding-agent", "session.json")
 
 
 def _print_doctor(provider: str):
@@ -27,6 +29,23 @@ def _default_provider() -> str:
     return os.getenv("LLM_PROVIDER", "openai")
 
 
+def _load_session(session_file: str):
+    with open(session_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict) or "goal" not in data:
+        raise ValueError("Invalid session file format")
+    data.setdefault("history", [])
+    return data
+
+
+def _save_session(session_file: str, state: dict):
+    parent = os.path.dirname(session_file)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(session_file, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Context-aware CLI Coding Agent")
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
@@ -37,12 +56,14 @@ def main():
     parser_run.add_argument("--provider", choices=providers, default=_default_provider(), help="LLM provider")
     parser_run.add_argument("--max-turns", type=int, default=10, help="Maximum agent reasoning turns")
     parser_run.add_argument("--auto-approve", action="store_true", help="Auto-approve dangerous tools (tests/shell/edit/git)")
+    parser_run.add_argument("--session-file", default=DEFAULT_SESSION_FILE, help="Path to save resumable session state")
     parser_run.add_argument("prompt", help="Coding goal for the autonomous agent")
 
     parser_ask = subparsers.add_parser("ask", help="Alias for 'run'")
     parser_ask.add_argument("--provider", choices=providers, default=_default_provider(), help="LLM provider")
     parser_ask.add_argument("--max-turns", type=int, default=10, help="Maximum agent reasoning turns")
     parser_ask.add_argument("--auto-approve", action="store_true", help="Auto-approve dangerous tools (tests/shell/edit/git)")
+    parser_ask.add_argument("--session-file", default=DEFAULT_SESSION_FILE, help="Path to save resumable session state")
     parser_ask.add_argument("prompt")
     
     parser_list = subparsers.add_parser("list-files", help="List tracked code and doc files")
@@ -64,6 +85,11 @@ def main():
         default="dummy",
         help="Provider used to initialize the agent while listing tools",
     )
+    parser_resume = subparsers.add_parser("resume", help="Resume the last saved autonomous session")
+    parser_resume.add_argument("--provider", choices=providers, default=_default_provider(), help="LLM provider")
+    parser_resume.add_argument("--max-turns", type=int, default=10, help="Maximum additional agent reasoning turns")
+    parser_resume.add_argument("--auto-approve", action="store_true", help="Auto-approve dangerous tools (tests/shell/edit/git)")
+    parser_resume.add_argument("--session-file", default=DEFAULT_SESSION_FILE, help="Path to saved session state")
 
     args = parser.parse_args()
 
@@ -119,8 +145,22 @@ def main():
     
     if args.subcommand in {"ask", "run"}:
         console.print(f"[bold white]User:[/bold white] {args.prompt}")
-        response = orchestrator.run(args.prompt)
+        state = orchestrator.run_with_state(args.prompt)
+        _save_session(args.session_file, state)
+        console.print(f"[dim]Session saved to {args.session_file}[/dim]")
+        response = state["final_answer"]
         console.print(f"[green]Agent:[/green] {response}")
+    elif args.subcommand == "resume":
+        try:
+            prior = _load_session(args.session_file)
+        except Exception as e:
+            console.print(f"[red]Failed to load session: {e}[/red]")
+            raise SystemExit(2)
+        console.print(f"[bold white]Resuming goal:[/bold white] {prior['goal']}")
+        state = orchestrator.run_with_state(prior["goal"], history=prior.get("history", []))
+        _save_session(args.session_file, state)
+        console.print(f"[dim]Session saved to {args.session_file}[/dim]")
+        console.print(f"[green]Agent:[/green] {state['final_answer']}")
     elif args.subcommand == "list-files":
         files = agent.list_files()
         console.print("[bold yellow]Project Files:[/bold yellow]")
