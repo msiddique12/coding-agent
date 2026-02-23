@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coding-agent-cli"
+version = "0.1.0"
+description = "Autonomous coding agent CLI with tool use (search, edit, tests, git)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "python-dotenv>=1.0.1,<2.0.0",
+  "requests>=2.31.0,<3.0.0",
+  "openai>=1.30.0,<3.0.0",
+  "huggingface-hub>=0.20.3,<1.0.0",
+  "rich>=13.7.0,<14.0.0",
+  "numpy<2.0",
+  "sentence-transformers>=2.2.2",
+  "faiss-cpu>=1.7.4",
+  "duckduckgo-search>=5.3.1b1,<6.0.0",
+  "GitPython>=3.1.41,<4.0.0",
+]
+
+[project.scripts]
+coding-agent = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli"]
+
+[tool.setuptools.packages.find]
+include = ["agent*", "execution*", "indexing*", "llm_providers*", "tools*", "utils*"]

@@ -14,8 +14,12 @@ huggingface-hub>=0.20.3,<1.0.0
 rich>=13.7.0,<14.0.0
 
 # Vector Search
+numpy<2.0
 sentence-transformers>=2.2.2
 faiss-cpu>=1.7.4
 
 # Web Search
 duckduckgo-search>=5.3.1b1,<6.0.0
+
+# Git Operations
+GitPython>=3.1.41,<4.0.0

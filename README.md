@@ -1,22 +1,126 @@
-# CLI Coding Agent
+# Coding Agent CLI
 
-A lightweight, extensible CLI coding agent that uses large language models to analyze and summarize a codebase. The project provides a multi-provider LLM abstraction (NVIDIA NIM and HuggingFace scaffolding), basic CLI commands for quick introspection, and utilities to discover and read project files.
+An autonomous coding agent you can run locally against a repo. It uses an LLM to plan actions, then calls tools to inspect files, search code, edit files, run tests, and use git.
 
-What exists so far: a multi-provider LLM abstraction, the core `CodingAgent` with querying, file-listing and summarization methods, a simple CLI (`ask`, `list-files`, `summarize-readme`, `summarize-file`), filesystem utilities, basic logging, a Dockerfile, and a smoke-test.
+The project now includes:
+- Autonomous ReAct-style orchestration (`run`)
+- Tooling for file search, code search, edits, test runs, shell commands, git status/diff/add/commit
+- Semantic indexer (`index`) for local project indexing
+- Multi-provider LLM support (`openai`, `nim`, `huggingface`, `dummy`)
+- Config validation (`doctor`)
+- Resilient tool loading (optional tools can fail without crashing the agent)
 
-Quick start
+## Quick Start (Clone -> Add API Key -> Run)
 
-1. Create a `.env` with necessary API keys (for example, `NIM_API_KEY=`).
-2. Run a provider smoke test:
+1. Clone the repo and enter it
 
 ```sh
-python tests/test_llm.py
+git clone <your-repo-url>
+cd coding-agent
 ```
 
-Next goals
-- Implement agent "tools" (file editor, git, test runner, safe shell) so the agent can apply, validate, and commit changes safely.
-- Add semantic search / RAG retrieval (LangChain + local embeddings + Chroma) to enable context-aware queries across large codebases.
-- Build automated feature creation: generate diffs from LLM outputs, preview and apply them, and run tests automatically.
-- Packaging and UX: add a console entry point so the agent can be installed as a global CLI, and add project-root detection and per-project config.
+2. Create and activate a virtual environment
 
-For more details, see the project source files and tests. Contributions and issues are welcome.
+```sh
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install the project (includes a `coding-agent` command)
+
+```sh
+pip install -e .
+```
+
+4. Add your API key
+
+```sh
+cp .env.example .env
+```
+
+Then edit `.env` and set:
+
+```env
+OPENAI_API_KEY=your_key_here
+```
+
+5. Verify config
+
+```sh
+coding-agent doctor --provider openai
+```
+
+6. Run the autonomous agent on a goal
+
+```sh
+coding-agent run "Inspect this repo and improve the test reliability"
+```
+
+Use `--auto-approve` if you want the agent to execute dangerous tools (edit/shell/tests/git) without prompting:
+
+```sh
+coding-agent run --auto-approve "Fix failing tests and commit the changes"
+```
+
+## Most Useful Commands
+
+```sh
+# Autonomous run (alias: ask)
+coding-agent run "Add a new CLI subcommand for X"
+
+# Show tool availability (and missing optional dependencies)
+coding-agent tools
+
+# Check provider environment variables
+coding-agent doctor --provider openai
+
+# Build semantic index
+coding-agent index
+
+# Utility commands
+coding-agent list-files
+coding-agent summarize-readme
+coding-agent summarize-file path/to/file.py
+```
+
+## Provider Setup
+
+Recommended default:
+- `openai` with `OPENAI_API_KEY`
+
+Also supported:
+- `nim` with `NIM_API_KEY`
+- `huggingface` with `HUGGINGFACE_API_KEY`
+- `dummy` for local testing without an API key
+
+You can override the provider per command:
+
+```sh
+coding-agent run --provider nim "Refactor the CLI help output"
+```
+
+Or set it in `.env`:
+
+```env
+LLM_PROVIDER=openai
+```
+
+## Notes / Requirements
+
+- `ripgrep` (`rg`) improves/ enables the `code_search` tool. If it is not installed, the agent still runs and marks the tool unavailable.
+- Web search requires the Python dependency `duckduckgo-search` (included in the package dependencies).
+- The agent logs prompts/responses to `logs/agent.log`.
+
+## Development
+
+Run tests:
+
+```sh
+pytest -q
+```
+
+Run without installing the console script:
+
+```sh
+python cli.py run "Summarize the architecture of this repo"
+```
