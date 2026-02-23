@@ -112,6 +112,7 @@ LLM_PROVIDER=openai
 - Web search requires the Python dependency `duckduckgo-search` (included in the package dependencies).
 - The agent logs prompts/responses to `logs/agent.log`.
 - The orchestrator now prefers a safer edit loop: inspect with `read_file`, make exact edits with `replace_in_file` / `append_file` or `apply_unified_diff`, then validate with tests/diff.
+- `shell_command` and `run_tests` support working directories, timeouts, and output truncation to reduce hangs and runaway logs during autonomous runs.
 
 ## Development
 
