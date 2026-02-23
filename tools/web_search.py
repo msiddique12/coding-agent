@@ -1,5 +1,10 @@
 from tools.base import AgentTool
 
+try:
+    from duckduckgo_search import DDGS
+except ModuleNotFoundError:  # pragma: no cover - exercised via runtime environment
+    DDGS = None
+
 class WebSearchTool(AgentTool):
     def name(self) -> str:
         return "web_search"
@@ -15,7 +20,8 @@ class WebSearchTool(AgentTool):
         Searches the web with the given query and returns the top results.
         """
         try:
-            from duckduckgo_search import DDGS
+            if DDGS is None:
+                return "Web search dependency not installed. Install 'duckduckgo-search' to use this tool."
 
             # DDGS context manager for clean session handling
             with DDGS() as ddgs:
@@ -33,7 +39,5 @@ class WebSearchTool(AgentTool):
                         f"  Snippet: {result.get('body', 'N/A')}"
                     )
                 return "\n".join(formatted_results)
-        except ModuleNotFoundError:
-            return "Web search dependency not installed. Install 'duckduckgo-search' to use this tool."
         except Exception as e:
             return f"An error occurred during the web search: {e}"
