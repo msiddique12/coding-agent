@@ -61,6 +61,9 @@ Use `--auto-approve` if you want the agent to execute dangerous tools (edit/shel
 
 ```sh
 coding-agent run --auto-approve "Fix failing tests and commit the changes"
+
+# Resume the last saved session
+coding-agent resume --auto-approve
 ```
 
 ## Most Useful Commands
@@ -113,6 +116,7 @@ LLM_PROVIDER=openai
 - The agent logs prompts/responses to `logs/agent.log`.
 - The orchestrator now prefers a safer edit loop: inspect with `read_file`, make exact edits with `replace_in_file` / `append_file` or `apply_unified_diff`, then validate with tests/diff.
 - `shell_command` and `run_tests` support working directories, timeouts, and output truncation to reduce hangs and runaway logs during autonomous runs.
+- `run` / `ask` save resumable state to `.coding-agent/session.json` by default; use `resume` to continue a task.
 
 ## Development
 
