@@ -5,7 +5,7 @@ An autonomous coding agent you can run locally against a repo. It uses an LLM to
 The project now includes:
 - Autonomous ReAct-style orchestration (`run`)
 - Tooling for file search, code search, edits, test runs, shell commands, git status/diff/add/commit
-- Deterministic file tools (`read_file`, `replace_in_file`, `append_file`) for precise edits
+- Deterministic file tools (`read_file`, `replace_in_file`, `append_file`, `apply_unified_diff`) for precise edits
 - Semantic indexer (`index`) for local project indexing
 - Multi-provider LLM support (`openai`, `nim`, `huggingface`, `dummy`)
 - Config validation (`doctor`)
@@ -111,7 +111,7 @@ LLM_PROVIDER=openai
 - `ripgrep` (`rg`) improves/ enables the `code_search` tool. If it is not installed, the agent still runs and marks the tool unavailable.
 - Web search requires the Python dependency `duckduckgo-search` (included in the package dependencies).
 - The agent logs prompts/responses to `logs/agent.log`.
-- The orchestrator now prefers a safer edit loop: inspect with `read_file`, make exact edits with `replace_in_file` / `append_file`, then validate with tests/diff.
+- The orchestrator now prefers a safer edit loop: inspect with `read_file`, make exact edits with `replace_in_file` / `append_file` or `apply_unified_diff`, then validate with tests/diff.
 
 ## Development
 
