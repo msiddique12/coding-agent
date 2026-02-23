@@ -27,7 +27,7 @@ class TestCodeEditTool(unittest.TestCase):
         result = self.tool.run(self.test_filename, instruction)
         
         # Assert
-        self.assertEqual(result, f"Successfully edited {self.test_filename}")
+        self.assertEqual(result, "Hello, universe!")
         
         with open(self.test_filename, "r") as f:
             content = f.read()
