@@ -29,7 +29,9 @@ class TestRunTestsTool(unittest.TestCase):
             ["pytest"],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
+            cwd=None,
+            timeout=120,
         )
 
     @patch('subprocess.run')
@@ -63,6 +65,27 @@ class TestRunTestsTool(unittest.TestCase):
         
         # Assert
         self.assertIn("Error: Command 'non_existent_command' not found.", result)
+
+    @patch('subprocess.run')
+    def test_timeout(self, mock_run):
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd=["pytest"], timeout=5, output="partial", stderr="hang")
+
+        result = self.tool.run(command="pytest", timeout_seconds=5)
+
+        self.assertIn("timed out after 5 seconds", result)
+        self.assertIn("partial", result)
+
+    @patch('subprocess.run')
+    def test_truncates_large_output(self, mock_run):
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "x" * 500
+        mock_result.stderr = ""
+        mock_run.return_value = mock_result
+
+        result = self.tool.run(command="pytest", max_output_chars=80)
+
+        self.assertIn("[truncated", result)
 
 if __name__ == '__main__':
     unittest.main()
