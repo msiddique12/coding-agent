@@ -1,4 +1,5 @@
 import argparse
+import os
 from dotenv import load_dotenv
 from rich.console import Console
 from llm_providers import supported_provider_names, validate_provider_environment
@@ -22,14 +23,26 @@ def _print_doctor(provider: str):
     return 1
 
 
+def _default_provider() -> str:
+    return os.getenv("LLM_PROVIDER", "openai")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Context-aware CLI Coding Agent")
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     providers = supported_provider_names()
 
-    parser_ask = subparsers.add_parser("ask", help="Ask a question to the agent")
-    parser_ask.add_argument("--provider", choices=providers, default="nim", help="LLM provider")
+    parser_run = subparsers.add_parser("run", help="Run the autonomous coding agent on a goal")
+    parser_run.add_argument("--provider", choices=providers, default=_default_provider(), help="LLM provider")
+    parser_run.add_argument("--max-turns", type=int, default=10, help="Maximum agent reasoning turns")
+    parser_run.add_argument("--auto-approve", action="store_true", help="Auto-approve dangerous tools (tests/shell/edit/git)")
+    parser_run.add_argument("prompt", help="Coding goal for the autonomous agent")
+
+    parser_ask = subparsers.add_parser("ask", help="Alias for 'run'")
+    parser_ask.add_argument("--provider", choices=providers, default=_default_provider(), help="LLM provider")
+    parser_ask.add_argument("--max-turns", type=int, default=10, help="Maximum agent reasoning turns")
+    parser_ask.add_argument("--auto-approve", action="store_true", help="Auto-approve dangerous tools (tests/shell/edit/git)")
     parser_ask.add_argument("prompt")
     
     parser_list = subparsers.add_parser("list-files", help="List tracked code and doc files")
@@ -44,6 +57,13 @@ def main():
     parser_index = subparsers.add_parser("index", help="Create or update the semantic index for the project")
     parser_doctor = subparsers.add_parser("doctor", help="Check API key configuration for a provider")
     parser_doctor.add_argument("--provider", choices=providers, default="openai", help="Provider to validate")
+    parser_tools = subparsers.add_parser("tools", help="List available and unavailable tools")
+    parser_tools.add_argument(
+        "--provider",
+        choices=providers,
+        default="dummy",
+        help="Provider used to initialize the agent while listing tools",
+    )
 
     args = parser.parse_args()
 
@@ -55,6 +75,24 @@ def main():
 
         indexer = CodeIndexer()
         indexer.index_project()
+        return
+
+    if args.subcommand == "tools":
+        try:
+            from agent.agent import CodingAgent
+            agent = CodingAgent(provider_name=args.provider)
+        except Exception as e:
+            console.print(f"[red]Unable to load tools: {e}[/red]")
+            raise SystemExit(2)
+
+        status = agent.get_tool_status()
+        console.print("[bold green]Available tools[/bold green]")
+        for name, desc in status["available"].items():
+            console.print(f"- [bold]{name}[/bold]: {desc}")
+        if status["unavailable"]:
+            console.print("[bold yellow]Unavailable tools[/bold yellow]")
+            for name, reason in status["unavailable"].items():
+                console.print(f"- [bold]{name}[/bold]: {reason}")
         return
 
     provider_name = getattr(args, "provider", "nim")
@@ -75,9 +113,11 @@ def main():
         console.print("[yellow]Install project dependencies first: `pip install -r requirements.txt`[/yellow]")
         raise SystemExit(2)
 
-    orchestrator = Orchestrator(agent)
+    max_turns = max(1, getattr(args, "max_turns", 10))
+    auto_approve = bool(getattr(args, "auto_approve", False))
+    orchestrator = Orchestrator(agent, max_turns=max_turns, auto_approve=auto_approve)
     
-    if args.subcommand == "ask":
+    if args.subcommand in {"ask", "run"}:
         console.print(f"[bold white]User:[/bold white] {args.prompt}")
         response = orchestrator.run(args.prompt)
         console.print(f"[green]Agent:[/green] {response}")

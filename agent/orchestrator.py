@@ -3,11 +3,11 @@ import json
 from rich.console import Console
 from rich.syntax import Syntax
 
-MAX_TURNS = 10
+DEFAULT_MAX_TURNS = 10
 console = Console()
 
 # Define tools that perform actions requiring user confirmation
-DANGEROUS_TOOLS = [
+DANGEROUS_TOOLS = {
     "run_tests",
     "shell_command",
     "code_edit",
@@ -15,18 +15,34 @@ DANGEROUS_TOOLS = [
     "delete_file",
     "git_add", 
     "git_commit"
-]
+}
 
 class Orchestrator:
-    def __init__(self, agent: CodingAgent):
+    def __init__(self, agent: CodingAgent, max_turns: int = DEFAULT_MAX_TURNS, auto_approve: bool = False):
         self.agent = agent
+        self.max_turns = max_turns
+        self.auto_approve = auto_approve
+
+    def _parse_action_json(self, response_str: str) -> dict:
+        cleaned = response_str.strip().replace("```json", "").replace("```", "").strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            start = cleaned.find("{")
+            end = cleaned.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                return json.loads(cleaned[start : end + 1])
+            raise
 
     def _think(self, goal: str, history: list):
         """
         This is the "Reason" part of ReAct. It thinks about the next action.
         """
         # Add project structure to the context
-        project_files = self.agent.use_tool("file_search")
+        try:
+            project_files = self.agent.use_tool("file_search")
+        except Exception:
+            project_files = "\n".join(self.agent.list_files())
         tools_with_args = []
         for tool_name, tool in self.agent.tools.items():
             args_str = ", ".join([f"{name}: {type.__name__}" for name, type in tool.args().items()])
@@ -68,15 +84,13 @@ If you have accomplished the goal, use the 'finish' tool.
         response_str = self.agent.get_response(prompt)
         
         try:
-            # The LLM can sometimes return markdown wrapping the JSON
-            response_str = response_str.strip().replace("```json", "").replace("```", "")
-            response = json.loads(response_str)
+            response = self._parse_action_json(response_str)
             return response
         except json.JSONDecodeError:
             # If the LLM returns a non-JSON response, we'll try to recover
             return {
                 "thought": "The last response was not valid JSON. I will try again.",
-                "action": {"tool": "error", "args": {"message": f"Invalid JSON response: {response_str}"}}
+                "action": {"tool": "finish", "args": {"answer": f"Stopped because the model returned invalid JSON: {response_str}"}}
             }
 
     def _act(self, action: dict):
@@ -88,14 +102,19 @@ If you have accomplished the goal, use the 'finish' tool.
 
         if not tool_name:
             return "Error: LLM response did not include a 'tool' for the action."
+        if not isinstance(tool_args, dict):
+            return f"Error: Tool args for '{tool_name}' must be a JSON object."
 
         console.print(f"Action: Using tool [bold cyan]{tool_name}[/bold cyan] with args: {tool_args}")
         
         # Safety confirmation for dangerous tools
         if tool_name in DANGEROUS_TOOLS:
-            confirm = input("Run this action? (y/n): ")
-            if confirm.lower() != 'y':
-                return f"User denied execution of tool '{tool_name}'."
+            if self.auto_approve:
+                console.print("[yellow]Auto-approved dangerous tool execution.[/yellow]")
+            else:
+                confirm = input("Run this action? (y/n): ")
+                if confirm.lower() != 'y':
+                    return f"User denied execution of tool '{tool_name}'."
 
         try:
             observation = self.agent.use_tool(tool_name, **tool_args)
@@ -110,8 +129,8 @@ If you have accomplished the goal, use the 'finish' tool.
         """
         history = []
         
-        for i in range(MAX_TURNS):
-            console.print(f"\n--- Turn {i+1}/{MAX_TURNS} ---")
+        for i in range(self.max_turns):
+            console.print(f"\n--- Turn {i+1}/{self.max_turns} ---")
             
             # 1. Think
             next_step = self._think(goal, history)
@@ -126,7 +145,7 @@ If you have accomplished the goal, use the 'finish' tool.
             history.append(f"Thought: {thought}")
             console.print(f"Thought: {thought}")
             
-            if action["tool"] == "finish":
+            if action.get("tool") == "finish":
                 final_answer = action.get("args", {}).get("answer", "No final answer provided.")
                 console.print(f"Final Answer: {final_answer}", style="bold green")
                 return final_answer
@@ -147,6 +166,6 @@ If you have accomplished the goal, use the 'finish' tool.
             else:
                 console.print(observation)
 
-        final_answer = "Reached max turns, stopping."
+        final_answer = f"Reached max turns ({self.max_turns}), stopping."
         console.print(f"[bold red]{final_answer}[/bold red]")
         return final_answer

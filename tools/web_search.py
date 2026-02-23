@@ -1,6 +1,4 @@
 from tools.base import AgentTool
-from duckduckgo_search import DDGS
-
 
 class WebSearchTool(AgentTool):
     def name(self) -> str:
@@ -17,6 +15,8 @@ class WebSearchTool(AgentTool):
         Searches the web with the given query and returns the top results.
         """
         try:
+            from duckduckgo_search import DDGS
+
             # DDGS context manager for clean session handling
             with DDGS() as ddgs:
                 results = list(ddgs.text(query, max_results=5))
@@ -30,8 +30,10 @@ class WebSearchTool(AgentTool):
                         f"Result {i+1}:\n"
                         f"  Title: {result.get('title', 'N/A')}\n"
                         f"  URL: {result.get('href', 'N/A')}\n"
-                        f"  Snippet: {result.get('body', 'N/A')}" # Removed trailing newline
+                        f"  Snippet: {result.get('body', 'N/A')}"
                     )
                 return "\n".join(formatted_results)
+        except ModuleNotFoundError:
+            return "Web search dependency not installed. Install 'duckduckgo-search' to use this tool."
         except Exception as e:
             return f"An error occurred during the web search: {e}"

@@ -29,26 +29,36 @@ class CodingAgent:
     def __init__(self, provider_name="nim"):
         # Use the provider factory so tests can inject a dummy provider
         self.llm = get_llm_client(provider_name)
-        
-        self.tools = {
-            tool.name(): tool for tool in [
-                FileSearchTool(),
-                CodeSearchTool(),
-                FileSummarizeTool(),
-                ToDoFinderTool(),
-                CodeEditTool(),
-                GitStatusTool(),
-                GitDiffTool(),
-                GitAddTool(),
-                GitCommitTool(),
-                RunTestsTool(),
-                CreateFileTool(),
-                DeleteFileTool(),
-                ShellCommandTool(),
-                WebSearchTool(),
-                FinishTool(),
-            ]
-        }
+        self.tools = {}
+        self.unavailable_tools = {}
+        self._load_tools()
+
+    def _load_tools(self):
+        tool_factories = [
+            ("file_search", FileSearchTool),
+            ("code_search", CodeSearchTool),
+            ("summarize_file", FileSummarizeTool),
+            ("todo_finder", ToDoFinderTool),
+            ("code_edit", CodeEditTool),
+            ("git_status", GitStatusTool),
+            ("git_diff", GitDiffTool),
+            ("git_add", GitAddTool),
+            ("git_commit", GitCommitTool),
+            ("run_tests", RunTestsTool),
+            ("create_file", CreateFileTool),
+            ("delete_file", DeleteFileTool),
+            ("shell_command", ShellCommandTool),
+            ("web_search", WebSearchTool),
+            ("finish", FinishTool),
+        ]
+
+        for tool_name, tool_cls in tool_factories:
+            try:
+                tool = tool_cls()
+                self.tools[tool.name()] = tool
+            except Exception as e:
+                self.unavailable_tools[tool_name] = str(e)
+                logging.warning("Skipping unavailable tool %s: %s", tool_name, e)
 
     def get_response(self, prompt: str) -> str:
         logging.info(f"Provider: {type(self.llm).__name__}, Prompt: {prompt!r}")
@@ -76,10 +86,19 @@ class CodingAgent:
     def use_tool(self, tool_name, **kwargs):
         tool = self.tools.get(tool_name)
         if not tool:
+            unavailable_reason = self.unavailable_tools.get(tool_name)
+            if unavailable_reason:
+                raise ValueError(f"Tool '{tool_name}' is unavailable: {unavailable_reason}")
             raise ValueError(f"Tool '{tool_name}' not found.")
         return tool.run(**kwargs)
     
     def list_tools(self):
         return {name: tool.description() for name, tool in self.tools.items()}
+
+    def get_tool_status(self):
+        return {
+            "available": self.list_tools(),
+            "unavailable": dict(self.unavailable_tools),
+        }
         
         
