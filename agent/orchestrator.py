@@ -14,6 +14,7 @@ DANGEROUS_TOOLS = {
     "shell_command",
     "code_edit",
     "create_file",
+    "apply_unified_diff",
     "append_file",
     "delete_file",
     "replace_in_file",
@@ -79,6 +80,7 @@ You will reason step-by-step, choosing one of the following tools to use at each
 Prefer deterministic tools for code changes:
 - Use read_file to inspect exact file contents / line ranges before editing.
 - Use replace_in_file or append_file for targeted edits.
+- Use apply_unified_diff for multi-line edits when you know exact context.
 - Use code_edit only for complex refactors.
 - Use git_diff and run_tests to validate before finishing.
 

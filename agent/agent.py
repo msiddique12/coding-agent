@@ -12,6 +12,7 @@ from tools.git_tools import GitStatusTool, GitDiffTool, GitAddTool, GitCommitToo
 from tools.run_tests import RunTestsTool
 from tools.finish import FinishTool
 from tools.create_file import CreateFileTool
+from tools.apply_unified_diff import UnifiedDiffApplyTool
 from tools.append_file import AppendFileTool
 from tools.delete_file import DeleteFileTool
 from tools.read_file import ReadFileTool
@@ -49,6 +50,7 @@ class CodingAgent:
             ("git_commit", GitCommitTool),
             ("run_tests", RunTestsTool),
             ("create_file", CreateFileTool),
+            ("apply_unified_diff", UnifiedDiffApplyTool),
             ("append_file", AppendFileTool),
             ("delete_file", DeleteFileTool),
             ("read_file", ReadFileTool),
