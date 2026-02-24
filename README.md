@@ -75,6 +75,9 @@ coding-agent run "Add a new CLI subcommand for X"
 # Show tool availability (and missing optional dependencies)
 coding-agent tools
 
+# Suggest targeted tests from changed files
+coding-agent suggest-tests
+
 # Check provider environment variables
 coding-agent doctor --provider openai
 
@@ -117,6 +120,7 @@ LLM_PROVIDER=openai
 - The orchestrator now prefers a safer edit loop: inspect with `read_file`, make exact edits with `replace_in_file` / `append_file` or `apply_unified_diff`, then validate with tests/diff.
 - `shell_command` and `run_tests` support working directories, timeouts, and output truncation to reduce hangs and runaway logs during autonomous runs.
 - `run` / `ask` save resumable state to `.coding-agent/session.json` by default; use `resume` to continue a task.
+- `suggest_test_commands` helps the agent (and you) choose targeted pytest commands from changed files before falling back to a full test run.
 
 ## Development
 
