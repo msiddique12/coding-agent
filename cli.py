@@ -90,6 +90,12 @@ def main():
     parser_resume.add_argument("--max-turns", type=int, default=10, help="Maximum additional agent reasoning turns")
     parser_resume.add_argument("--auto-approve", action="store_true", help="Auto-approve dangerous tools (tests/shell/edit/git)")
     parser_resume.add_argument("--session-file", default=DEFAULT_SESSION_FILE, help="Path to saved session state")
+    parser_suggest_tests = subparsers.add_parser("suggest-tests", help="Suggest targeted test commands from changed files")
+    parser_suggest_tests.add_argument(
+        "--paths",
+        default="",
+        help="Optional comma-separated file paths (otherwise uses git diff/untracked files)",
+    )
 
     args = parser.parse_args()
 
@@ -119,6 +125,15 @@ def main():
             console.print("[bold yellow]Unavailable tools[/bold yellow]")
             for name, reason in status["unavailable"].items():
                 console.print(f"- [bold]{name}[/bold]: {reason}")
+        return
+
+    if args.subcommand == "suggest-tests":
+        try:
+            from tools.suggest_test_commands import SuggestTestCommandsTool
+            console.print(SuggestTestCommandsTool().run(paths=args.paths))
+        except Exception as e:
+            console.print(f"[red]Unable to suggest tests: {e}[/red]")
+            raise SystemExit(2)
         return
 
     provider_name = getattr(args, "provider", "nim")

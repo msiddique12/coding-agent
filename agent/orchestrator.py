@@ -82,7 +82,7 @@ Prefer deterministic tools for code changes:
 - Use replace_in_file or append_file for targeted edits.
 - Use apply_unified_diff for multi-line edits when you know exact context.
 - Use code_edit only for complex refactors.
-- Use git_diff and run_tests to validate before finishing.
+- Use git_diff and suggest_test_commands before run_tests to validate before finishing.
 
 TOOLS:
 {formatted_tools}

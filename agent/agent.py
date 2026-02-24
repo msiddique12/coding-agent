@@ -10,6 +10,7 @@ from tools.todo_finder import ToDoFinderTool
 from tools.code_edit import CodeEditTool
 from tools.git_tools import GitStatusTool, GitDiffTool, GitAddTool, GitCommitTool
 from tools.run_tests import RunTestsTool
+from tools.suggest_test_commands import SuggestTestCommandsTool
 from tools.finish import FinishTool
 from tools.create_file import CreateFileTool
 from tools.apply_unified_diff import UnifiedDiffApplyTool
@@ -49,6 +50,7 @@ class CodingAgent:
             ("git_add", GitAddTool),
             ("git_commit", GitCommitTool),
             ("run_tests", RunTestsTool),
+            ("suggest_test_commands", SuggestTestCommandsTool),
             ("create_file", CreateFileTool),
             ("apply_unified_diff", UnifiedDiffApplyTool),
             ("append_file", AppendFileTool),
