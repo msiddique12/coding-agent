@@ -33,10 +33,12 @@ Return only the updated code without explanation.
 """
         try:
             edited_content = llm.query(prompt)
-            # Clean the response from the LLM
-            if edited_content.strip().startswith("```") and edited_content.strip().endswith("```"):
-                lines = edited_content.strip().split("\n")
-                # Remove the first and last lines if they are code fences
+            if not edited_content or not edited_content.strip():
+                return "LLM editing error: received empty response; file not modified."
+            # Strip code fences if the LLM wrapped the output
+            stripped = edited_content.strip()
+            if stripped.startswith("```"):
+                lines = stripped.split("\n")
                 if lines[0].strip().startswith("```") and lines[-1].strip() == "```":
                     edited_content = "\n".join(lines[1:-1])
             with open(filename, "w", encoding="utf-8") as f:
