@@ -8,7 +8,7 @@ class NIMProvider(LLMProvider):
         self.api_key = os.getenv("NIM_API_KEY")
         self.base_url = "https://integrate.api.nvidia.com/v1"
         self.endpoint = "https://api.nim.nvidia.com/v1/chat/completions"
-        self.model = "qwen/qwen2.5-coder-32b-instruct"
+        self.model = os.getenv("NIM_MODEL", "qwen/qwen2.5-coder-32b-instruct")
         
         if not self.api_key:
             raise ValueError("NIM_API_KEY not found")
