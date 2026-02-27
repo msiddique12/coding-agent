@@ -12,6 +12,8 @@ class AppendFileTool(AgentTool):
         return {"filename": str, "content": str}
 
     def run(self, filename: str, content: str):
+        if not content:
+            return "Error: content must not be empty."
         try:
             with open(filename, "a", encoding="utf-8") as f:
                 f.write(content)

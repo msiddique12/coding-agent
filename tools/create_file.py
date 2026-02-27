@@ -13,11 +13,16 @@ class CreateFileTool(AgentTool):
     
     def run(self, filename: str, content: str):
         try:
+            if os.path.exists(filename):
+                return (
+                    f"Error: file '{filename}' already exists. "
+                    "Use replace_in_file or append_file to modify it."
+                )
             # Create directories if they don't exist
             dir_path = os.path.dirname(filename)
             if dir_path:
                 os.makedirs(dir_path, exist_ok=True)
-            
+
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(content)
             return f"Successfully created file: {filename}"

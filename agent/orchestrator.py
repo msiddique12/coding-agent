@@ -182,7 +182,7 @@ If you have accomplished the goal, use the 'finish' tool.
             # Pretty print code blocks if observation is a string
             if isinstance(observation, str):
                 if "```" in observation:
-                     syntax = Syntax(observation, "python", theme="solarized-dark", line_numbers=True)
+                     syntax = Syntax(observation, "text", theme="solarized-dark", line_numbers=True)
                      console.print(syntax)
                 else:
                     console.print(observation)
