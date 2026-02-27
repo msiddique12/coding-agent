@@ -5,7 +5,13 @@ from llm_providers.base import LLMProvider
 class HuggingFaceProvider(LLMProvider):
     def __init__(self):
         self.api_key = os.getenv("HUGGINGFACE_API_KEY")
-        self.endpoint = "https://api-inference.huggingface.co/models/YOUR_MODEL" #later: add model name
+        model = os.getenv("HUGGINGFACE_MODEL")
+        if not model:
+            raise ValueError(
+                "HUGGINGFACE_MODEL environment variable is required. "
+                "Set it to the HuggingFace model ID, e.g. 'mistralai/Mixtral-8x7B-Instruct-v0.1'."
+            )
+        self.endpoint = f"https://api-inference.huggingface.co/models/{model}"
 
     def query(self, prompt: str) -> str:
         if not self.api_key:
