@@ -1,5 +1,4 @@
 import os
-import requests
 from llm_providers.base import LLMProvider
 from openai import OpenAI
 
